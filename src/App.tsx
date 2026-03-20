@@ -298,7 +298,7 @@ const startNew = () => {
 
 {/* 전체 완료 - 풀스크린 오버레이 */}
           {allDone && (
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' as const, padding: '32px', fontFamily: font, textAlign: 'center' }}>
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#fff', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' as const, padding: '32px 32px 100px', fontFamily: font, textAlign: 'center', overflowY: 'auto' as const }}>
 
               {/* 배경 파스텔 원들 */}
               <div style={{ position: 'absolute', top: '-60px', left: '-60px', width: '220px', height: '220px', borderRadius: '50%', background: 'radial-gradient(circle, #ffd6e8, #ffe8f0)', opacity: 0.6 }} />
@@ -372,7 +372,6 @@ const startNew = () => {
 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
               <span style={{ fontSize: '18px' }}>⚡</span>
               <span style={{ fontWeight: '900', fontSize: '15px', color: '#c47a3a' }}>자유 진행</span>
-              <span style={{ fontSize: '12px', fontWeight: '800', color: '#f9c88a' }}>총 6시간 30분</span>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
 {/* ▶️ 시작 */}
                 {steps.filter(s => s.parallel).some(s => !s.running && !s.done) && (
@@ -475,7 +474,6 @@ const startNew = () => {
 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
               <span style={{ fontSize: '18px' }}>📋</span>
               <span style={{ fontWeight: '900', fontSize: '15px', color: '#c47a3a' }}>순차 진행</span>
-              <span style={{ fontSize: '12px', fontWeight: '800', color: '#f9c88a' }}>총 4시간</span>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
                 {/* ▶️ 시작 */}
                 {steps.filter(s => !s.parallel).some(s => !s.running && !s.done) && (
