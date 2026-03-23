@@ -48,17 +48,34 @@ export default function App() {
   const [showSeqResult, setShowSeqResult] = useState(false)
   const intervalRef = useRef<any>(null)
 
+// 화면 잠금 해제 시 타이머 재시작
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        lastTickRef.current = Date.now()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [])
+
   const anyRunning = steps.some(s => s.running)
   const allDone = steps.every(s => s.done)
+  const lastTickRef = useRef<number>(Date.now())
 
   useEffect(() => {
     clearInterval(intervalRef.current)
     if (!started || !anyRunning) return
+    lastTickRef.current = Date.now()
     intervalRef.current = setInterval(() => {
+      const now = Date.now()
+      const delta = Math.round((now - lastTickRef.current) / 1000)
+      lastTickRef.current = now
+      const tick = Math.max(1, delta) // 잠금 해제 시 실제 경과 시간 반영
       setSteps(prev => prev.map(s => {
         if (!s.running || s.done) return s
-        const t = s.timeLeft - 1
-        const elapsed = (s.elapsedSeconds ?? 0) + 1
+        const t = Math.max(0, s.timeLeft - tick)
+        const elapsed = (s.elapsedSeconds ?? 0) + tick
         if (t <= 0) {
           try { new Audio('https://www.soundjay.com/buttons/beep-01a.mp3').play() } catch {}
           if (navigator.vibrate) navigator.vibrate([400,200,400])
@@ -67,13 +84,14 @@ export default function App() {
         }
         return { ...s, timeLeft: t, elapsedSeconds: elapsed }
       }))
-      setLimitLeft(t => {
-        if (t <= 1) {
+setLimitLeft(t => {
+        const next = t - tick
+        if (next <= 0) {
           try { new Audio('https://www.soundjay.com/buttons/beep-01a.mp3').play() } catch {}
           alert('⚠️ 12시간 초과!')
           return 0
         }
-        return t - 1
+        return next
       })
     }, 1000)
     return () => clearInterval(intervalRef.current)
