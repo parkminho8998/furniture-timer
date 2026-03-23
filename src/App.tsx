@@ -50,7 +50,7 @@ export default function App() {
 
   // 시작하기 버튼 누를 때 인트로 음성 재생
   const playIntro = () => {
-    const audio = new Audio('/intro.mp3.m4a')
+    const audio = new Audio('/intro.mp3')
     audio.play().catch(() => {})
   }
   useEffect(() => {
@@ -66,8 +66,7 @@ export default function App() {
   const anyRunning = steps.some(s => s.running)
   const allDone = steps.every(s => s.done)
   const lastTickRef = useRef<number>(Date.now())
-  const introPlayedRef = useRef(false)
-
+ 
   useEffect(() => {
     clearInterval(intervalRef.current)
     if (!started || !anyRunning) return
