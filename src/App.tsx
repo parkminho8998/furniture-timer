@@ -48,14 +48,11 @@ export default function App() {
   const [showSeqResult, setShowSeqResult] = useState(false)
   const intervalRef = useRef<any>(null)
 
-  // 앱 시작 시 인트로 음성 재생
-  useEffect(() => {
-    if (!introPlayedRef.current) {
-      introPlayedRef.current = true
-      const audio = new Audio('/intro.mp3.m4a')
-      audio.play().catch(() => {})
-    }
-  }, [])
+  // 시작하기 버튼 누를 때 인트로 음성 재생
+  const playIntro = () => {
+    const audio = new Audio('/intro.mp3.m4a')
+    audio.play().catch(() => {})
+  }
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
@@ -251,7 +248,7 @@ const startNew = () => {
             />
             <button
               style={{ width: '100%', padding: '14px', borderRadius: '14px', border: 'none', background: nameInput.trim() ? '#f9c88a' : '#f0e0d0', color: nameInput.trim() ? '#fff' : '#bbb', fontWeight: '900', fontSize: '17px', cursor: nameInput.trim() ? 'pointer' : 'default', fontFamily: font }}
-              onClick={() => { if (nameInput.trim()) { setProjectName(nameInput.trim()); setScreen('timer') } }}>
+              onClick={() => { if (nameInput.trim()) { playIntro(); setProjectName(nameInput.trim()); setScreen('timer') } }}>
               🚀 시작하기
             </button>
           </div>
