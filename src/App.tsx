@@ -52,7 +52,7 @@ export default function App() {
   useEffect(() => {
     if (!introPlayedRef.current) {
       introPlayedRef.current = true
-      const audio = new Audio('/intro.mp3')
+      const audio = new Audio('/intro.mp3.m4a')
       audio.play().catch(() => {})
     }
   }, [])
