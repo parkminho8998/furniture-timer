@@ -48,7 +48,14 @@ export default function App() {
   const [showSeqResult, setShowSeqResult] = useState(false)
   const intervalRef = useRef<any>(null)
 
-// 화면 잠금 해제 시 타이머 재시작
+  // 앱 시작 시 인트로 음성 재생
+  useEffect(() => {
+    if (!introPlayedRef.current) {
+      introPlayedRef.current = true
+      const audio = new Audio('/intro.mp3')
+      audio.play().catch(() => {})
+    }
+  }, [])
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
@@ -62,6 +69,7 @@ export default function App() {
   const anyRunning = steps.some(s => s.running)
   const allDone = steps.every(s => s.done)
   const lastTickRef = useRef<number>(Date.now())
+  const introPlayedRef = useRef(false)
 
   useEffect(() => {
     clearInterval(intervalRef.current)
