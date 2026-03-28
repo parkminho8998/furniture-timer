@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useMediaSession } from './useMediaSession'
 import type { Step, ProjectRecord } from './types'
 import { saveProject, loadProjects, deleteProject, saveProgress, loadProgressList, deleteProgress, clearProgress } from './storage'
 import type { Progress } from './storage'
@@ -53,18 +54,86 @@ export default function App() {
     const audio = new Audio('/intro.mp3')
     audio.play().catch(() => {})
   }
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        lastTickRef.current = Date.now()
+const hiddenAtRef = useRef<number | null>(null)
+
+useEffect(() => {
+  const handleVisibility = () => {
+    if (document.visibilityState === 'hidden') {
+      hiddenAtRef.current = Date.now()
+    } else if (document.visibilityState === 'visible') {
+      if (hiddenAtRef.current !== null) {
+        const elapsed = Math.floor((Date.now() - hiddenAtRef.current) / 1000)
+        hiddenAtRef.current = null
+
+        if (elapsed > 0) {
+          setSteps(prev => prev.map(s => {
+            if (!s.running || s.done) return s
+            const t = Math.max(0, s.timeLeft - elapsed)
+            const elapsedSeconds = (s.elapsedSeconds ?? 0) + elapsed
+            if (t <= 0) {
+              if (navigator.vibrate) navigator.vibrate([400, 200, 400])
+              setTimeout(() => alert(`${s.emoji} "${s.name}" 시간 완료! ⏰`), 50)
+              return { ...s, timeLeft: 0, running: false, elapsedSeconds }
+            }
+            return { ...s, timeLeft: t, elapsedSeconds }
+          }))
+          setLimitLeft(prev => {
+            const next = prev - elapsed
+            if (next <= 0) {
+              alert('⚠️ 12시간 초과!')
+              return 0
+            }
+            return next
+          })
+        }
       }
+      lastTickRef.current = Date.now()
     }
-    document.addEventListener('visibilitychange', handleVisibility)
-    return () => document.removeEventListener('visibilitychange', handleVisibility)
-  }, [])
+  }
+  document.addEventListener('visibilitychange', handleVisibility)
+  return () => document.removeEventListener('visibilitychange', handleVisibility)
+}, [])
 
   const anyRunning = steps.some(s => s.running)
   const allDone = steps.every(s => s.done)
+  // ✅ 이 블록 전체를 allDone 선언 바로 아래에 추가
+const runningStep = steps.find(s => s.running)
+
+const handleMediaPause = useCallback(() => {
+  setSteps(prev => prev.map(s => ({ ...s, running: false })))
+}, [])
+
+const handleMediaResume = useCallback(() => {
+  setSteps(prev => {
+    const firstNotDone = prev.find(s => !s.done)
+    if (!firstNotDone) return prev
+    return prev.map(s => s.id === firstNotDone.id ? { ...s, running: true } : s)
+  })
+  if (!started) setStarted(true)
+}, [started])
+
+const handleMediaComplete = useCallback(() => {
+  setSteps(prev => {
+    const current = prev.find(s => s.running)
+    if (!current) return prev
+    return prev.map(s =>
+      s.id === current.id
+        ? { ...s, running: false, done: true, elapsedSeconds: s.elapsedSeconds ?? (s.totalSeconds - s.timeLeft) }
+        : s
+    )
+  })
+}, [])
+
+useMediaSession({
+  stepName: runningStep?.name ?? '',
+  stepEmoji: runningStep?.emoji ?? '⏸',
+  projectName,
+  timeDisplay: runningStep ? fmt(runningStep.timeLeft) : fmt(limitLeft),
+  isRunning: anyRunning,
+  onPause: handleMediaPause,
+  onResume: handleMediaResume,
+  onComplete: handleMediaComplete,
+})
   const lastTickRef = useRef<number>(Date.now())
  
   useEffect(() => {
